@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using PracticaCalificada1.UnitOfWork;
+using PracticaCalificada1.Web.Models;
+using NLog.Extensions.Logging;
+using NLog.Web;
 
 namespace PracticaCalificada1.Web
 {
@@ -20,6 +22,8 @@ namespace PracticaCalificada1.Web
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
             Configuration = builder.Build();
+
+            env.ConfigureNLog("NLogConfig.config");
         }
 
         public IConfigurationRoot Configuration { get; }
@@ -27,6 +31,17 @@ namespace PracticaCalificada1.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddTransient<IUnitOfWork>(option =>
+            new PracticaUnitOfWork(
+                new SalesDbContext(
+                    new DbContextOptionsBuilder<SalesDbContext>()
+                    .UseSqlServer(Configuration.GetConnectionString("salesdb"))
+                    .Options
+                    )
+                ));
+
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
             // Add framework services.
             services.AddMvc();
         }
@@ -34,8 +49,11 @@ namespace PracticaCalificada1.Web
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
+            //loggerFactory.AddConsole(Configuration.GetSection("Logging"));
+            //loggerFactory.AddDebug();
+
+            loggerFactory.AddNLog();
+            app.AddNLogWeb();
 
             if (env.IsDevelopment())
             {
