@@ -45,9 +45,10 @@ namespace PracticaCalificada1.Web.Controllers
         }
 
         [HttpPost]
-        public IActionResult Eliminar(Product product)
-        {
-            _unitOfWork.Products.Delete(product);
+        [ActionName("Eliminar")]
+        public IActionResult EliminarEntidad(int id)
+        { 
+            _unitOfWork.Products.Delete(_unitOfWork.Products.GetById(id));
 
             return RedirectToAction("Listar");
         }

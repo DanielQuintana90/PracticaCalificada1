@@ -42,10 +42,11 @@ namespace PracticaCalificada1.Web.Controllers
             return RedirectToAction("Listar");
         }
 
-        [HttpPost]
-        public IActionResult Eliminar(Customer customer)
+        [HttpPost] 
+        [ActionName("Eliminar")]
+        public IActionResult EliminarEntidad(int id)
         {
-            _unitOfWork.Customers.Delete(customer);
+            _unitOfWork.Customers.Delete(_unitOfWork.Customers.GetById(id));
 
             return RedirectToAction("Listar");
         }
